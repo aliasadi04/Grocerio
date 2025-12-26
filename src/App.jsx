@@ -3,17 +3,23 @@ import { supabase } from './lib/supabase'
 import { Plus, Check, Trash2, ShoppingCart, ShoppingBag, CheckCircle } from 'lucide-react'
 
 // GroceryItem Component
-function GroceryItem({ item, onToggle, onDelete }) {
+function GroceryItem({ item, onToggle, onDeleteClick }) {
+  const handleItemClick = (e) => {
+    // Don't toggle if clicking the delete button
+    if (e.target.closest('.grocery-item__delete')) return
+    onToggle(item.id, !item.checked)
+  }
+
   return (
-    <div className={`grocery-item ${item.checked ? 'grocery-item--checked' : ''}`}>
-      <div 
-        className="grocery-item__checkbox"
-        onClick={() => onToggle(item.id, !item.checked)}
-        role="checkbox"
-        aria-checked={item.checked}
-        tabIndex={0}
-        onKeyDown={(e) => e.key === 'Enter' && onToggle(item.id, !item.checked)}
-      >
+    <div 
+      className={`grocery-item ${item.checked ? 'grocery-item--checked' : ''}`}
+      onClick={handleItemClick}
+      role="checkbox"
+      aria-checked={item.checked}
+      tabIndex={0}
+      onKeyDown={(e) => e.key === 'Enter' && onToggle(item.id, !item.checked)}
+    >
+      <div className="grocery-item__checkbox">
         <Check size={16} className="grocery-item__checkbox-icon" />
       </div>
       <div className="grocery-item__content">
@@ -22,7 +28,10 @@ function GroceryItem({ item, onToggle, onDelete }) {
       </div>
       <button 
         className="grocery-item__delete"
-        onClick={() => onDelete(item.id)}
+        onClick={(e) => {
+          e.stopPropagation()
+          onDeleteClick(item)
+        }}
         aria-label={`Delete ${item.name}`}
       >
         <Trash2 size={18} />
@@ -32,13 +41,22 @@ function GroceryItem({ item, onToggle, onDelete }) {
 }
 
 // ConfirmModal Component
-function ConfirmModal({ items, onConfirm, onCancel }) {
+function ConfirmModal({ items, onConfirm, onCancel, mode = 'buy' }) {
+  const isSingleDelete = mode === 'delete'
+  
   return (
     <div className="modal-overlay" onClick={onCancel}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal__header">
-          <h2 className="modal__title">Ready to checkout?</h2>
-          <p className="modal__subtitle">Review your checked items before removing them</p>
+          <h2 className="modal__title">
+            {isSingleDelete ? 'Remove item?' : 'Ready to checkout?'}
+          </h2>
+          <p className="modal__subtitle">
+            {isSingleDelete 
+              ? 'This item will be removed from your list'
+              : 'Review your checked items before removing them'
+            }
+          </p>
         </div>
         <div className="modal__content">
           {items.map((item) => (
@@ -53,8 +71,11 @@ function ConfirmModal({ items, onConfirm, onCancel }) {
           <button className="modal__button modal__button--cancel" onClick={onCancel}>
             Go Back
           </button>
-          <button className="modal__button modal__button--confirm" onClick={onConfirm}>
-            Confirm Purchase
+          <button 
+            className={`modal__button ${isSingleDelete ? 'modal__button--delete' : 'modal__button--confirm'}`} 
+            onClick={onConfirm}
+          >
+            {isSingleDelete ? 'Remove Item' : 'Confirm Purchase'}
           </button>
         </div>
       </div>
@@ -74,6 +95,7 @@ export default function App() {
   const [newItemName, setNewItemName] = useState('')
   const [newItemQuantity, setNewItemQuantity] = useState('1')
   const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [itemToDelete, setItemToDelete] = useState(null)
   const [toast, setToast] = useState(null)
 
   // Show toast notification
@@ -246,21 +268,22 @@ export default function App() {
 
       {/* Add Item Form */}
       <form className="add-form" onSubmit={handleAddItem}>
+        <input
+          type="text"
+          className="add-form__input add-form__input--name"
+          placeholder="Add an item..."
+          value={newItemName}
+          onChange={(e) => setNewItemName(e.target.value)}
+          aria-label="Item name"
+        />
         <div className="add-form__row">
-          <input
-            type="text"
-            className="add-form__input"
-            placeholder="Add an item..."
-            value={newItemName}
-            onChange={(e) => setNewItemName(e.target.value)}
-            aria-label="Item name"
-          />
           <input
             type="text"
             className="add-form__input add-form__input--quantity"
             placeholder="Qty"
             value={newItemQuantity}
             onChange={(e) => setNewItemQuantity(e.target.value)}
+            onFocus={(e) => e.target.select()}
             aria-label="Quantity"
           />
           <button 
@@ -269,6 +292,7 @@ export default function App() {
             disabled={!newItemName.trim()}
           >
             <Plus size={20} />
+            <span>Add Item</span>
           </button>
         </div>
       </form>
@@ -288,7 +312,7 @@ export default function App() {
               key={item.id}
               item={item}
               onToggle={handleToggleItem}
-              onDelete={handleDeleteItem}
+              onDeleteClick={(item) => setItemToDelete(item)}
             />
           ))
         )}
@@ -309,12 +333,26 @@ export default function App() {
         </button>
       </div>
 
-      {/* Confirmation Modal */}
+      {/* Confirmation Modal - Buy Items */}
       {showConfirmModal && (
         <ConfirmModal
           items={checkedItems}
           onConfirm={handleBuyItems}
           onCancel={() => setShowConfirmModal(false)}
+          mode="buy"
+        />
+      )}
+
+      {/* Confirmation Modal - Delete Single Item */}
+      {itemToDelete && (
+        <ConfirmModal
+          items={[itemToDelete]}
+          onConfirm={() => {
+            handleDeleteItem(itemToDelete.id)
+            setItemToDelete(null)
+          }}
+          onCancel={() => setItemToDelete(null)}
+          mode="delete"
         />
       )}
 

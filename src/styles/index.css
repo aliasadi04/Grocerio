@@ -123,6 +123,9 @@ body::before {
   box-shadow: var(--shadow-soft);
   margin-bottom: var(--space-xl);
   border: 1px solid var(--color-cloud);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
 }
 
 .add-form__row {
@@ -131,7 +134,6 @@ body::before {
 }
 
 .add-form__input {
-  flex: 1;
   padding: var(--space-md);
   border: 2px solid var(--color-cloud);
   border-radius: var(--radius-md);
@@ -151,13 +153,17 @@ body::before {
   color: var(--color-stone);
 }
 
+.add-form__input--name {
+  width: 100%;
+}
+
 .add-form__input--quantity {
-  width: 80px;
-  flex: none;
+  flex: 1;
   text-align: center;
 }
 
 .add-form__button {
+  flex: 1;
   background: var(--color-sage);
   color: white;
   border: none;
@@ -170,17 +176,23 @@ body::before {
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: var(--space-sm);
 }
 
-.add-form__button:hover {
+.add-form__button:hover:not(:disabled) {
   background: var(--color-sage-light);
   transform: translateY(-1px);
   box-shadow: var(--shadow-medium);
 }
 
-.add-form__button:active {
+.add-form__button:active:not(:disabled) {
   transform: translateY(0);
+}
+
+.add-form__button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* Grocery List */
@@ -218,6 +230,8 @@ body::before {
   border: 1px solid var(--color-cloud);
   transition: all 0.25s ease;
   animation: slideIn 0.3s ease;
+  cursor: pointer;
+  user-select: none;
 }
 
 @keyframes slideIn {
@@ -236,6 +250,14 @@ body::before {
   transform: translateX(4px);
 }
 
+.grocery-item:hover .grocery-item__checkbox {
+  border-color: var(--color-sage);
+}
+
+.grocery-item:active {
+  transform: scale(0.98);
+}
+
 .grocery-item--checked {
   background: var(--color-sage-pale);
   border-color: var(--color-sage-light);
@@ -251,17 +273,13 @@ body::before {
   height: 24px;
   border: 2px solid var(--color-cloud);
   border-radius: var(--radius-sm);
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
   flex-shrink: 0;
   background: white;
-}
-
-.grocery-item__checkbox:hover {
-  border-color: var(--color-sage);
+  pointer-events: none;
 }
 
 .grocery-item--checked .grocery-item__checkbox {
@@ -492,6 +510,16 @@ body::before {
 
 .modal__button--confirm:hover {
   background: var(--color-sage-light);
+}
+
+.modal__button--delete {
+  background: var(--color-terracotta);
+  border: none;
+  color: white;
+}
+
+.modal__button--delete:hover {
+  background: #d4715a;
 }
 
 /* Toast Notification */
