@@ -239,12 +239,14 @@ body::before {
 }
 
 .add-form__input--quantity {
-  flex: 1;
+  width: 70px;
+  flex-shrink: 0;
   text-align: center;
 }
 
 .add-form__button {
   flex: 1;
+  min-width: 0;
   background: var(--color-sage);
   color: white;
   border: none;
